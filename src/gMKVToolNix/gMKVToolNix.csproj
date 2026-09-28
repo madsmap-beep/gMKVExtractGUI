@@ -1,122 +1,32 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{82FC8FA8-50C0-44FA-8801-80050C0ED89F}</ProjectGuid>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>gMKVToolNix</RootNamespace>
-    <AssemblyName>gMKVToolNix</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <AssemblyTitle>gMKVToolNix</AssemblyTitle>
+    <Description>A library to execute MKVToolNix cli utilities in .NET</Description>
+    <Company>Gpower2</Company>
+    <Product>gMKVToolNix</Product>
+    <Copyright>Copyright © 2014-2026</Copyright>
+    <AssemblyVersion>2.15.0.0</AssemblyVersion>
+    <FileVersion>2.15.0.0</FileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Newtonsoft.Json.13.0.3\lib\net40\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Chapters\matroskachapters.cs">
+    <Compile Update="Chapters\matroskachapters.cs">
       <DependentUpon>matroskachapters.xsd</DependentUpon>
     </Compile>
-    <Compile Include="CueSheet\Cue.cs" />
-    <Compile Include="CueSheet\CueTrack.cs" />
-    <Compile Include="FileExtensions.cs" />
-    <Compile Include="gMKVVersionParser.cs" />
-    <Compile Include="Localization\ILocalizationService.cs" />
-    <Compile Include="Localization\Metadata.cs" />
-    <Compile Include="Localization\TranslationFileService.cs" />
-    <Compile Include="Localization\TranslationMaintenanceService.cs" />
-    <Compile Include="Localization\TranslationPathService.cs" />
-    <Compile Include="Localization\TranslationEntry.cs" />
-    <Compile Include="Localization\TranslationFile.cs" />
-    <Compile Include="Localization\TranslationSyncResult.cs" />
-    <Compile Include="MkvExtract\ChapterExtensions.cs" />
-    <Compile Include="MkvExtract\CuesExtractionMode.cs" />
-    <Compile Include="MkvExtract\gMKVExtractExtensions.cs" />
-    <Compile Include="MkvExtract\TrackParameter.cs" />
-    <Compile Include="MkvMerge\CodecPrivateDataExtensions.cs" />
-    <Compile Include="OptionValue.cs" />
-    <Compile Include="OptionValueExtensions.cs" />
-    <Compile Include="PlatformExtensions.cs" />
-    <Compile Include="ProcessExtensions.cs" />
-    <Compile Include="ProcessStream.cs" />
-    <Compile Include="Segments\MkvChapterTypes.cs" />
-    <Compile Include="MkvExtract\MkvExtractGlobalOptions.cs" />
-    <Compile Include="MkvExtract\MkvExtractModes.cs" />
-    <Compile Include="MkvInfo\MkvInfoOptions.cs" />
-    <Compile Include="MkvMerge\MkvMergeOptions.cs" />
-    <Compile Include="Segments\MkvTrackType.cs" />
-    <Compile Include="MkvExtract\TimecodesExtractionMode.cs" />
-    <Compile Include="Segments\gMKVAttachment.cs" />
-    <Compile Include="Segments\gMKVChapter.cs" />
-    <Compile Include="MkvExtract\gMKVExtract.cs" />
-    <Compile Include="MkvExtract\gMKVExtractFilenamePatterns.cs" />
-    <Compile Include="MkvExtract\gMKVExtractSegmentsParameters.cs" />
-    <Compile Include="MkvInfo\gMKVInfo.cs" />
-    <Compile Include="Log\gMKVLogger.cs" />
-    <Compile Include="MkvMerge\gMKVMerge.cs" />
-    <Compile Include="Segments\gMKVSegment.cs" />
-    <Compile Include="Segments\gMKVSegmentInfo.cs" />
-    <Compile Include="Segments\gMKVTrack.cs" />
-    <Compile Include="gMKVHelper.cs" />
-    <Compile Include="gMKVVersion.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Chapters\matroskachapters.dtd" />
-    <None Include="Chapters\matroskachapters.xsd">
+    <None Update="Chapters\matroskachapters.xsd">
       <SubType>Designer</SubType>
     </None>
-    <None Include="packages.config" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>
