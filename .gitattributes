@@ -13,3 +13,6 @@
 bin/** -text
 obj/** -text
 packages/** -text
+
+# Shell scripts need LF for Linux interpreters.
+*.sh text eol=lf

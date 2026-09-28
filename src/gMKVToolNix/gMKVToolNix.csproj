@@ -22,6 +22,7 @@
     <Compile Update="Chapters\matroskachapters.cs">
       <DependentUpon>matroskachapters.xsd</DependentUpon>
     </Compile>
+    <PackageReference Include="Microsoft.Win32.Registry" />
     <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
   <ItemGroup>

@@ -64,6 +64,7 @@
           "centralPackageVersions": {
             "CommandLineParser": "2.9.1",
             "Microsoft.CSharp": "4.7.0",
+            "Microsoft.Win32.Registry": "5.0.0",
             "Newtonsoft.Json": "13.0.4",
             "System.Data.DataSetExtensions": "4.5.0"
           },
@@ -84,7 +85,7 @@
               "version": "[8.0.31, 8.0.31]"
             },
             {
-              "name": "Microsoft.NETCore.App.Host.win-x64",
+              "name": "Microsoft.NETCore.App.Host.linux-x64",
               "version": "[8.0.31, 8.0.31]"
             },
             {
@@ -105,6 +106,11 @@
             }
           },
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.401/PortableRuntimeIdentifierGraph.json"
+        }
+      },
+      "runtimes": {
+        "linux-x64": {
+          "#import": []
         }
       }
     },
@@ -155,6 +161,11 @@
           "framework": "netstandard2.0",
           "targetAlias": "netstandard2.0",
           "dependencies": {
+            "Microsoft.Win32.Registry": {
+              "target": "Package",
+              "version": "[5.0.0, )",
+              "versionCentrallyManaged": true
+            },
             "NETStandard.Library": {
               "suppressParent": "All",
               "target": "Package",
@@ -170,6 +181,7 @@
           "centralPackageVersions": {
             "CommandLineParser": "2.9.1",
             "Microsoft.CSharp": "4.7.0",
+            "Microsoft.Win32.Registry": "5.0.0",
             "Newtonsoft.Json": "13.0.4",
             "System.Data.DataSetExtensions": "4.5.0"
           },
@@ -185,6 +197,11 @@
           "assetTargetFallback": true,
           "warn": true,
           "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.401\\RuntimeIdentifierGraph.json"
+        }
+      },
+      "runtimes": {
+        "linux-x64": {
+          "#import": []
         }
       }
     }

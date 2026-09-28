@@ -1274,7 +1274,7 @@ namespace gMKVToolNix
 
             if (IsHandleCreated && InvokeRequired)
             {
-                BeginInvoke((MethodInvoker)delegate
+                BeginInvoke((System.Windows.Forms.MethodInvoker)delegate
                 {
                     SetTableLayoutMainStatus(argStatus);
                 });

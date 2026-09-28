@@ -1,0 +1,11 @@
+C:\Users\smap\Documents\Git\Repositories\gMKVExtractGUI\src\gMKVToolNix\bin\Release\netstandard2.0\gMKVToolNix.deps.json
+C:\Users\smap\Documents\Git\Repositories\gMKVExtractGUI\src\gMKVToolNix\bin\Release\netstandard2.0\gMKVToolNix.dll
+C:\Users\smap\Documents\Git\Repositories\gMKVExtractGUI\src\gMKVToolNix\bin\Release\netstandard2.0\gMKVToolNix.pdb
+C:\Users\smap\Documents\Git\Repositories\gMKVExtractGUI\src\gMKVToolNix\obj\Release\netstandard2.0\gMKVToolNix.csproj.AssemblyReference.cache
+C:\Users\smap\Documents\Git\Repositories\gMKVExtractGUI\src\gMKVToolNix\obj\Release\netstandard2.0\gMKVToolNix.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\smap\Documents\Git\Repositories\gMKVExtractGUI\src\gMKVToolNix\obj\Release\netstandard2.0\gMKVToolNix.AssemblyInfoInputs.cache
+C:\Users\smap\Documents\Git\Repositories\gMKVExtractGUI\src\gMKVToolNix\obj\Release\netstandard2.0\gMKVToolNix.AssemblyInfo.cs
+C:\Users\smap\Documents\Git\Repositories\gMKVExtractGUI\src\gMKVToolNix\obj\Release\netstandard2.0\gMKVToolNix.csproj.CoreCompileInputs.cache
+C:\Users\smap\Documents\Git\Repositories\gMKVExtractGUI\src\gMKVToolNix\obj\Release\netstandard2.0\gMKVToolNix.sourcelink.json
+C:\Users\smap\Documents\Git\Repositories\gMKVExtractGUI\src\gMKVToolNix\obj\Release\netstandard2.0\gMKVToolNix.dll
+C:\Users\smap\Documents\Git\Repositories\gMKVExtractGUI\src\gMKVToolNix\obj\Release\netstandard2.0\gMKVToolNix.pdb
