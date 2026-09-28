@@ -22,7 +22,7 @@
     <Compile Update="Chapters\matroskachapters.cs">
       <DependentUpon>matroskachapters.xsd</DependentUpon>
     </Compile>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
   <ItemGroup>
     <None Update="Chapters\matroskachapters.xsd">

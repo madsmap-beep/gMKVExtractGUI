@@ -235,6 +235,8 @@
       "packagesPath": "C:\\Users\\smap\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\smap\\Documents\\Git\\Repositories\\gMKVExtractGUI\\src\\gMKVToolNix\\obj\\",
       "projectStyle": "PackageReference",
+      "centralPackageVersionsManagementEnabled": true,
+      "CentralPackageTransitivePinningEnabled": true,
       "configFilePaths": [
         "C:\\Users\\smap\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
@@ -252,6 +254,9 @@
         }
       },
       "warningProperties": {
+        "noWarn": [
+          "NU1507"
+        ],
         "warnAsError": [
           "NU1605"
         ]
@@ -276,8 +281,15 @@
           },
           "Newtonsoft.Json": {
             "target": "Package",
-            "version": "[13.0.4, )"
+            "version": "[13.0.4, )",
+            "versionCentrallyManaged": true
           }
+        },
+        "centralPackageVersions": {
+          "CommandLineParser": "2.9.1",
+          "Microsoft.CSharp": "4.7.0",
+          "Newtonsoft.Json": "13.0.4",
+          "System.Data.DataSetExtensions": "4.5.0"
         },
         "imports": [
           "net461",

@@ -269,6 +269,8 @@
       "packagesPath": "C:\\Users\\smap\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\smap\\Documents\\Git\\Repositories\\gMKVExtractGUI\\tests\\gMKVToolnix.Unit.Tests\\obj\\",
       "projectStyle": "PackageReference",
+      "centralPackageVersionsManagementEnabled": true,
+      "CentralPackageTransitivePinningEnabled": true,
       "configFilePaths": [
         "C:\\Users\\smap\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
@@ -293,6 +295,9 @@
         }
       },
       "warningProperties": {
+        "noWarn": [
+          "NU1507"
+        ],
         "warnAsError": [
           "NU1605"
         ]
@@ -315,6 +320,12 @@
             "version": "[2.0.3, )",
             "autoReferenced": true
           }
+        },
+        "centralPackageVersions": {
+          "CommandLineParser": "2.9.1",
+          "Microsoft.CSharp": "4.7.0",
+          "Newtonsoft.Json": "13.0.4",
+          "System.Data.DataSetExtensions": "4.5.0"
         },
         "imports": [
           "net461",
@@ -341,5 +352,13 @@
         "netstandard2.0"
       ]
     }
-  ]
+  ],
+  "centralTransitiveDependencyGroups": {
+    ".NETStandard,Version=v2.0": {
+      "Newtonsoft.Json": {
+        "include": "Runtime, Compile, Native, BuildTransitive",
+        "version": "[13.0.4, )"
+      }
+    }
+  }
 }

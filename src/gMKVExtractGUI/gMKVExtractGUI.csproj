@@ -100,7 +100,7 @@
     <None Update="gmkvextract-ko.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\gMKVToolNix\gMKVToolNix.csproj" />
