@@ -12,4 +12,6 @@ The package is written to `artifacts/debian/gmkvextractgui_2.15.0_amd64.deb`. It
 sudo apt install ./artifacts/debian/gmkvextractgui_2.15.0_amd64.deb
 ```
 
+After installation, open Matroska files from the application menu or choose multiple files in the app. The package also registers the app as a handler for Matroska video and audio files, so compatible file managers can launch it with selected files.
+
 Set `VERSION` to override the package version, for example `VERSION=2.15.1 bash packaging/debian/build-deb.sh`.

@@ -6,7 +6,7 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v8.0": {
-      "gMKVExtractGUI.Linux/1.0.0": {
+      "gMKVExtractGUI/1.0.0": {
         "dependencies": {
           "Avalonia": "11.3.7",
           "Avalonia.Desktop": "11.3.7",
@@ -14,7 +14,7 @@
           "gMKVToolNix": "1.0.0"
         },
         "runtime": {
-          "gMKVExtractGUI.Linux.dll": {}
+          "gMKVExtractGUI.dll": {}
         }
       },
       "Avalonia/11.3.7": {
@@ -411,7 +411,7 @@
     }
   },
   "libraries": {
-    "gMKVExtractGUI.Linux/1.0.0": {
+    "gMKVExtractGUI/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

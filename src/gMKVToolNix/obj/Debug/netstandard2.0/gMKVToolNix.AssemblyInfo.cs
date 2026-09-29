@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCopyrightAttribute("Copyright © 2014-2026")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("A library to execute MKVToolNix cli utilities in .NET")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("2.15.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+511486c33d2252eff0b316cc95a60fa8220989c3")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8e4ae6f5ba88846753336c09d42fa19ea77a069f")]
 [assembly: System.Reflection.AssemblyProductAttribute("gMKVToolNix")]
 [assembly: System.Reflection.AssemblyTitleAttribute("gMKVToolNix")]
 [assembly: System.Reflection.AssemblyVersionAttribute("2.15.0.0")]
