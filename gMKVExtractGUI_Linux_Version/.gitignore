@@ -1,0 +1,4 @@
+**/bin/
+**/obj/
+artifacts/
+packaging/arch/gMKVExtractGUI_Linux_Version-*.tar.gz

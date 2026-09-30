@@ -1,0 +1,36 @@
+pkgname=gmkvextractgui
+pkgver="${VERSION:-2.15.0}"
+pkgrel=1
+pkgdesc='Matroska track extraction GUI'
+arch=('x86_64')
+url='https://github.com/madsmap-beep/gMKVExtractGUI'
+license=('Unlicense')
+depends=('mkvtoolnix-cli' 'fontconfig' 'libice' 'libsm' 'libx11' 'libxext' 'libxrender' 'libxrandr' 'libxcursor' 'libxi')
+makedepends=('dotnet-sdk')
+source=("gMKVExtractGUI_Linux_Version-${pkgver}.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cd "$srcdir/gMKVExtractGUI_Linux_Version"
+    dotnet publish src/gMKVExtractGUI.Linux/gMKVExtractGUI.Linux.csproj \
+        --configuration Release --runtime linux-x64 --self-contained true \
+        --output "$srcdir/publish"
+}
+
+package() {
+    install -d "$pkgdir/opt/gmkvextractgui" \
+        "$pkgdir/usr/bin" \
+        "$pkgdir/usr/share/applications" \
+        "$pkgdir/usr/share/icons/hicolor/scalable/apps"
+    cp -a "$srcdir/publish/." "$pkgdir/opt/gmkvextractgui/"
+    printf '%s\n' '#!/bin/sh' 'exec /opt/gmkvextractgui/gMKVExtractGUI "$@"' \
+        > "$pkgdir/usr/bin/gMKVExtractGUI"
+    chmod 0755 "$pkgdir/usr/bin/gMKVExtractGUI" \
+        "$pkgdir/opt/gmkvextractgui/gMKVExtractGUI"
+    install -m 0644 "$srcdir/gMKVExtractGUI_Linux_Version/packaging/gmkvextractgui.desktop" \
+        "$pkgdir/usr/share/applications/gmkvextractgui.desktop"
+    install -m 0644 "$srcdir/gMKVExtractGUI_Linux_Version/packaging/gMKVExtractGUI.svg" \
+        "$pkgdir/usr/share/icons/hicolor/scalable/apps/gMKVExtractGUI.svg"
+    install -Dm644 "$srcdir/gMKVExtractGUI_Linux_Version/LICENSE" \
+        "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
