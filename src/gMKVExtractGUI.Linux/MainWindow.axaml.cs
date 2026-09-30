@@ -155,7 +155,6 @@ public partial class MainWindow : Window
         string[] inputPaths = GetInputPaths();
         string outputPath = this.FindControl<TextBox>("OutputPathBox")!.Text?.Trim() ?? "";
         string toolPath = this.FindControl<TextBox>("ToolPathBox")!.Text?.Trim() ?? "";
-        int mode = this.FindControl<ComboBox>("ExtractionModeBox")!.SelectedIndex;
         if (inputPaths.Length == 0 || inputPaths.Any(inputPath => !File.Exists(inputPath)) || !Directory.Exists(toolPath))
         {
             SetStatus("Choose existing input files and a valid MKVToolNix folder first.");
@@ -168,8 +167,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        if ((mode == 0 && !_segmentRows.Any(row => row.IsSelected))
-            || (mode is 1 or 2 && !_segmentRows.Any(row => row.Segment is gMKVTrack)))
+        if (!_segmentRows.Any(row => row.IsSelected))
         {
             SetStatus("Select at least one item to extract.");
             return;
@@ -181,14 +179,6 @@ public partial class MainWindow : Window
             var extractor = new gMKVExtract(toolPath);
             extractor.MkvExtractProgressUpdated += progress => Dispatcher.UIThread.Post(() => this.FindControl<ProgressBar>("ProgressBar")!.Value = progress);
             extractor.MkvExtractTrackUpdated += (filename, trackName) => Dispatcher.UIThread.Post(() => SetStatus($"{Path.GetFileName(filename)}: {trackName}"));
-            Action<gMKVExtractSegmentsParameters> extract = mode switch
-            {
-                0 => extractor.ExtractMKVSegmentsThreaded,
-                1 => extractor.ExtractMKVCuesThreaded,
-                2 => extractor.ExtractMKVTimecodesThreaded,
-                3 => extractor.ExtractMkvTagsThreaded,
-                _ => extractor.ExtractMkvCuesheetThreaded
-            };
 
             SetBusy(true);
             this.FindControl<ProgressBar>("ProgressBar")!.Value = 0;
@@ -196,15 +186,11 @@ public partial class MainWindow : Window
             {
                 string inputPath = inputPaths[i];
                 List<gMKVSegment> selected = _segmentRows
-                    .Where(row => row.InputPath == inputPath && (mode is 1 or 2 || row.IsSelected))
+                    .Where(row => row.InputPath == inputPath && row.IsSelected)
                     .Select(row => row.Segment)
                     .ToList();
-                if (mode is 1 or 2)
-                {
-                    selected = selected.OfType<gMKVTrack>().Cast<gMKVSegment>().ToList();
-                }
 
-                if (mode <= 2 && selected.Count == 0)
+                if (selected.Count == 0)
                 {
                     continue;
                 }
@@ -215,14 +201,12 @@ public partial class MainWindow : Window
                     MKVSegmentsToExtract = selected,
                     OutputDirectory = outputPath,
                     ChapterType = (MkvChapterTypes)this.FindControl<ComboBox>("ChapterFormatBox")!.SelectedIndex,
-                    TimecodesExtractionMode = TimecodesExtractionMode.NoTimecodes,
-                    CueExtractionMode = CuesExtractionMode.NoCues,
                     FilenamePatterns = CreateFilenamePatterns(),
                     OverwriteExistingFile = this.FindControl<CheckBox>("OverwriteCheckBox")!.IsChecked == true
                 };
 
                 SetStatus($"Extracting {i + 1} of {inputPaths.Length}: {Path.GetFileName(inputPath)}...");
-                await Task.Run(() => extract(parameters));
+                await Task.Run(() => extractor.ExtractMKVSegmentsThreaded(parameters));
                 if (extractor.ThreadedException != null)
                 {
                     throw extractor.ThreadedException;
@@ -263,82 +247,108 @@ public partial class MainWindow : Window
         var menu = new ContextMenu();
 
         int selectedCount = _segmentRows.Count(row => row.IsSelected);
-        menu.Items.Add(CreateSelectionMenuItem(
-            $"Check All Tracks ({selectedCount}/{_segmentRows.Count})",
-            _segmentRows.ToList()));
+        menu.Items.Add(CreateSelectAllMenuItem($"Select All Extractable Elements ({_segmentRows.Count})", _segmentRows.ToList()));
+        menu.Items.Add(CreateClearSelectionMenuItem($"Clear All Extractable Elements ({selectedCount})", _segmentRows.ToList()));
         menu.Items.Add(new Separator());
 
         AddTrackTypeMenu(menu, MkvTrackType.video, "Video");
         AddTrackTypeMenu(menu, MkvTrackType.audio, "Audio");
         AddTrackTypeMenu(menu, MkvTrackType.subtitles, "Subtitle");
-        AddSegmentTypeMenu(menu, "Chapter", row => row.Segment is gMKVChapter);
-        AddSegmentTypeMenu(menu, "Attachment", row => row.Segment is gMKVAttachment);
+        AddElementTypeMenu(menu, "Chapter Tracks", row => row.Segment is gMKVChapter);
+        AddElementTypeMenu(menu, "Attachment Tracks", row => row.Segment is gMKVAttachment);
 
         menu.Open(selectByTypeButton);
     }
 
     private void AddTrackTypeMenu(ContextMenu menu, MkvTrackType trackType, string typeLabel)
     {
+        string trackLabel = $"{typeLabel} Tracks";
         List<SegmentRow> rows = _segmentRows
             .Where(row => row.Segment is gMKVTrack track && track.TrackType == trackType)
             .ToList();
         int selectedCount = rows.Count(row => row.IsSelected);
-        var typeMenu = new MenuItem
+        var trackMenu = new MenuItem
         {
-            Header = $"Check {typeLabel} Tracks... ({selectedCount}/{rows.Count})",
-            IsEnabled = selectedCount < rows.Count
+            Header = $"{trackLabel} ({selectedCount}/{rows.Count})",
+            IsEnabled = rows.Count > 0
         };
 
-        typeMenu.Items.Add(CreateSelectionMenuItem($"All {typeLabel} Tracks ({selectedCount}/{rows.Count})", rows));
+        trackMenu.Items.Add(CreateSelectAllMenuItem($"All {trackLabel} ({selectedCount}/{rows.Count})", rows));
+        trackMenu.Items.Add(CreateClearSelectionMenuItem($"Clear {trackLabel} ({selectedCount})", rows));
+
         foreach ((string characteristic, Func<gMKVTrack, string> selector) in GetTrackCharacteristics(trackType))
         {
             List<(string Value, List<SegmentRow> Rows)> groups = rows
                 .Select(row => (Row: row, Track: (gMKVTrack)row.Segment))
-                .GroupBy(item => selector(item.Track))
+                .GroupBy(item => selector(item.Track) ?? "")
                 .OrderBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
                 .Select(group => (group.Key, group.Select(item => item.Row).ToList()))
                 .ToList();
-
             var characteristicMenu = new MenuItem
             {
-                Header = $"{typeLabel} Tracks by {characteristic} ({groups.Count})...",
+                Header = $"{trackLabel} by {characteristic} ({groups.Count})...",
                 IsEnabled = groups.Count > 0
             };
+
             foreach ((string value, List<SegmentRow> groupRows) in groups)
             {
                 string displayValue = string.IsNullOrWhiteSpace(value) ? "(unspecified)" : value;
                 int groupSelectedCount = groupRows.Count(row => row.IsSelected);
-                characteristicMenu.Items.Add(CreateSelectionMenuItem(
-                    $"{characteristic}: [{displayValue}] ({groupSelectedCount}/{groupRows.Count})",
+                characteristicMenu.Items.Add(CreateSelectAllMenuItem(
+                    $"{displayValue} ({groupSelectedCount}/{groupRows.Count})",
                     groupRows));
             }
 
-            typeMenu.Items.Add(characteristicMenu);
+            trackMenu.Items.Add(characteristicMenu);
         }
 
-        menu.Items.Add(typeMenu);
+        menu.Items.Add(trackMenu);
     }
 
-    private void AddSegmentTypeMenu(ContextMenu menu, string typeLabel, Func<SegmentRow, bool> matches)
+    private static IReadOnlyList<(string Name, Func<gMKVTrack, string> Selector)> GetTrackCharacteristics(MkvTrackType trackType)
+    {
+        var characteristics = new List<(string Name, Func<gMKVTrack, string> Selector)>
+        {
+            ("Language", track => track.Language),
+            ("Language IETF", track => track.LanguageIetf),
+            ("Codec", track => track.CodecID),
+            ("Track Name", track => track.TrackName),
+            ("Forced", track => track.Forced ? "Yes" : "No")
+        };
+
+        if (trackType == MkvTrackType.video)
+        {
+            characteristics.Insert(2, ("Resolution", track => $"{track.VideoPixelWidth}x{track.VideoPixelHeight}"));
+        }
+        else if (trackType == MkvTrackType.audio)
+        {
+            characteristics.Insert(2, ("Channels", track => track.AudioChannels.ToString()));
+        }
+
+        return characteristics;
+    }
+
+    private void AddElementTypeMenu(ContextMenu menu, string typeLabel, Func<SegmentRow, bool> matches)
     {
         List<SegmentRow> rows = _segmentRows.Where(matches).ToList();
         int selectedCount = rows.Count(row => row.IsSelected);
-        var typeMenu = new MenuItem
+        var elementMenu = new MenuItem
         {
-            Header = $"Check {typeLabel} Tracks... ({selectedCount}/{rows.Count})",
-            IsEnabled = selectedCount < rows.Count
+            Header = $"{typeLabel} ({selectedCount}/{rows.Count})",
+            IsEnabled = rows.Count > 0
         };
-        typeMenu.Items.Add(CreateSelectionMenuItem($"All {typeLabel} Tracks ({selectedCount}/{rows.Count})", rows));
-        menu.Items.Add(typeMenu);
+
+        elementMenu.Items.Add(CreateSelectAllMenuItem($"All {typeLabel} ({selectedCount}/{rows.Count})", rows));
+        elementMenu.Items.Add(CreateClearSelectionMenuItem($"Clear {typeLabel} ({selectedCount})", rows));
+        menu.Items.Add(elementMenu);
     }
 
-    private static MenuItem CreateSelectionMenuItem(string header, List<SegmentRow> rows)
+    private static MenuItem CreateSelectAllMenuItem(string header, List<SegmentRow> rows)
     {
-        int selectedCount = rows.Count(row => row.IsSelected);
         var item = new MenuItem
         {
             Header = header,
-            IsEnabled = selectedCount < rows.Count
+            IsEnabled = rows.Any(row => !row.IsSelected)
         };
         item.Click += (_, _) =>
         {
@@ -350,27 +360,21 @@ public partial class MainWindow : Window
         return item;
     }
 
-    private static IReadOnlyList<(string Name, Func<gMKVTrack, string> Selector)> GetTrackCharacteristics(MkvTrackType trackType)
+    private static MenuItem CreateClearSelectionMenuItem(string header, List<SegmentRow> rows)
     {
-        var common = new List<(string Name, Func<gMKVTrack, string> Selector)>
+        var item = new MenuItem
         {
-            ("Language", track => track.Language),
-            ("Language IETF", track => track.LanguageIetf),
-            ("Codec", track => track.CodecID),
-            ("Track Name", track => track.TrackName),
-            ("Forced", track => track.Forced ? "Yes" : "No")
+            Header = header,
+            IsEnabled = rows.Any(row => row.IsSelected)
         };
-
-        if (trackType == MkvTrackType.video)
+        item.Click += (_, _) =>
         {
-            common.Insert(2, ("Resolution", track => $"{track.VideoPixelWidth}x{track.VideoPixelHeight}"));
-        }
-        else if (trackType == MkvTrackType.audio)
-        {
-            common.Insert(2, ("Channels", track => track.AudioChannels.ToString()));
-        }
-
-        return common;
+            foreach (SegmentRow row in rows)
+            {
+                row.IsSelected = false;
+            }
+        };
+        return item;
     }
 
     private void RemoveAllInputFiles_Click(object? sender, RoutedEventArgs e)
@@ -457,6 +461,7 @@ public partial class MainWindow : Window
         _inputFiles.Clear();
         this.FindControl<TextBlock>("ItemCountText")!.Text = "No file analyzed";
         this.FindControl<Button>("ExtractButton")!.IsEnabled = false;
+        this.FindControl<Button>("SelectByTypeButton")!.IsEnabled = false;
     }
 
     private string[] GetInputPaths() => (this.FindControl<TextBox>("InputPathBox")!.Text ?? "")
@@ -499,7 +504,7 @@ public partial class MainWindow : Window
 
 public sealed class SegmentRow : INotifyPropertyChanged
 {
-    private bool _isSelected = true;
+    private bool _isSelected;
 
     public gMKVSegment Segment { get; }
     public string Kind { get; }
