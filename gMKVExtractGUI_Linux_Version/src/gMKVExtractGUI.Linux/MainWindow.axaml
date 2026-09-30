@@ -71,7 +71,7 @@
       <Grid RowDefinitions="Auto,1,*" RowSpacing="12">
         <Grid ColumnDefinitions="*,Auto,Auto,Auto">
           <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-            <TextBlock Classes="section-title" Text="Extractable elements" />
+            <TextBlock Classes="section-title" Text="Extractable Tracks" />
             <TextBlock x:Name="ItemCountText" Foreground="#69766F" VerticalAlignment="Center" Text="No file analyzed" />
           </StackPanel>
           <Button x:Name="SelectByTypeButton" Grid.Column="1" Click="SelectByType_Click" Content="Select by type..." IsEnabled="False" Margin="8,0,0,0" />
