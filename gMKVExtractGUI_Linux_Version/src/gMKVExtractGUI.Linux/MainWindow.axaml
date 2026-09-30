@@ -115,7 +115,7 @@
       </Grid>
     </Border>
 
-    <Grid Grid.Row="3" RowDefinitions="Auto,Auto" RowSpacing="10">
+    <Grid Grid.Row="3" RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
       <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
         <TextBlock Classes="field-label" Text="Chapter format" />
         <ComboBox x:Name="ChapterFormatBox" Width="130" SelectedIndex="0">
@@ -127,10 +127,23 @@
         <CheckBox x:Name="OverwriteCheckBox" Content="Overwrite existing files" VerticalAlignment="Center" />
         <TextBlock x:Name="StatusText" Foreground="#52615B" VerticalAlignment="Center" Margin="8,0,0,0" Text="Choose an input file to begin." />
       </StackPanel>
-      <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="12">
-        <ProgressBar x:Name="ProgressBar" Minimum="0" Maximum="100" Height="8" VerticalAlignment="Center" />
-        <Button x:Name="ExtractButton" Grid.Column="1" Click="Extract_Click" Content="Start extraction" IsEnabled="False" MinWidth="160" />
-      </Grid>
+      <StackPanel Grid.Row="1" Spacing="6">
+        <StackPanel x:Name="OverallProgressPanel" Spacing="3" IsVisible="False">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock x:Name="OverallProgressLabel" Classes="field-label" Text="Overall progress" />
+            <TextBlock x:Name="OverallProgressPercent" Grid.Column="1" Classes="field-label" Text="0%" />
+          </Grid>
+          <ProgressBar x:Name="OverallProgressBar" Minimum="0" Maximum="100" Height="8" />
+        </StackPanel>
+        <StackPanel Spacing="3">
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBlock x:Name="FileProgressLabel" Classes="field-label" Text="File progress" TextWrapping="Wrap" />
+            <TextBlock x:Name="FileProgressPercent" Grid.Column="1" Classes="field-label" Text="0%" />
+          </Grid>
+          <ProgressBar x:Name="FileProgressBar" Minimum="0" Maximum="100" Height="8" />
+        </StackPanel>
+      </StackPanel>
+      <Button x:Name="ExtractButton" Grid.Row="2" Click="Extract_Click" Content="Start extraction" IsEnabled="False" MinWidth="160" HorizontalAlignment="Right" />
     </Grid>
   </Grid>
 </Window>

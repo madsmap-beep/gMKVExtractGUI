@@ -19,6 +19,8 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<InputFileGroup> _inputFiles = new();
     private bool _isAnalyzed;
     private bool _isAnalyzing;
+    private int _completedExtractionFiles;
+    private int _extractionFileCount;
 
     public ObservableCollection<SegmentRow> SegmentRows => _segmentRows;
     public ObservableCollection<InputFileGroup> InputFiles => _inputFiles;
@@ -149,7 +151,12 @@ public partial class MainWindow : Window
 
             this.FindControl<TextBlock>("ItemCountText")!.Text = $"{_segmentRows.Count} items";
             _isAnalyzed = true;
-            this.FindControl<ProgressBar>("ProgressBar")!.Value = 0;
+            this.FindControl<StackPanel>("OverallProgressPanel")!.IsVisible = false;
+            this.FindControl<ProgressBar>("FileProgressBar")!.Value = 0;
+            this.FindControl<ProgressBar>("OverallProgressBar")!.Value = 0;
+            this.FindControl<TextBlock>("FileProgressLabel")!.Text = "File progress";
+            this.FindControl<TextBlock>("FileProgressPercent")!.Text = "0%";
+            this.FindControl<TextBlock>("OverallProgressPercent")!.Text = "0%";
             SetStatus(_segmentRows.Count == 0 ? "No extractable tracks, chapters, or attachments found." : $"Analysis complete for {inputPaths.Length} file(s).");
 
             TextBox outputBox = this.FindControl<TextBox>("OutputPathBox")!;
@@ -195,24 +202,30 @@ public partial class MainWindow : Window
         try
         {
             Directory.CreateDirectory(outputPath);
+            List<(string InputPath, List<gMKVSegment> Segments)> extractionFiles = inputPaths
+                .Select(inputPath => (
+                    InputPath: inputPath,
+                    Segments: _segmentRows
+                        .Where(row => row.InputPath == inputPath && row.IsSelected)
+                        .Select(row => row.Segment)
+                        .ToList()))
+                .Where(file => file.Segments.Count > 0)
+                .ToList();
+
+            _completedExtractionFiles = 0;
+            _extractionFileCount = extractionFiles.Count;
+            this.FindControl<StackPanel>("OverallProgressPanel")!.IsVisible = _extractionFileCount > 1;
+
             var extractor = new gMKVExtract(toolPath);
-            extractor.MkvExtractProgressUpdated += progress => Dispatcher.UIThread.Post(() => this.FindControl<ProgressBar>("ProgressBar")!.Value = progress);
+            extractor.MkvExtractProgressUpdated += progress => Dispatcher.UIThread.Post(() => UpdateExtractionProgress(progress));
             extractor.MkvExtractTrackUpdated += (filename, trackName) => Dispatcher.UIThread.Post(() => SetStatus($"{Path.GetFileName(filename)}: {trackName}"));
 
             SetBusy(true);
-            this.FindControl<ProgressBar>("ProgressBar")!.Value = 0;
-            for (int i = 0; i < inputPaths.Length; i++)
+            for (int i = 0; i < extractionFiles.Count; i++)
             {
-                string inputPath = inputPaths[i];
-                List<gMKVSegment> selected = _segmentRows
-                    .Where(row => row.InputPath == inputPath && row.IsSelected)
-                    .Select(row => row.Segment)
-                    .ToList();
-
-                if (selected.Count == 0)
-                {
-                    continue;
-                }
+                (string inputPath, List<gMKVSegment> selected) = extractionFiles[i];
+                this.FindControl<TextBlock>("FileProgressLabel")!.Text = $"File progress: {Path.GetFileName(inputPath)}";
+                UpdateExtractionProgress(0);
 
                 var parameters = new gMKVExtractSegmentsParameters
                 {
@@ -224,12 +237,15 @@ public partial class MainWindow : Window
                     OverwriteExistingFile = this.FindControl<CheckBox>("OverwriteCheckBox")!.IsChecked == true
                 };
 
-                SetStatus($"Extracting {i + 1} of {inputPaths.Length}: {Path.GetFileName(inputPath)}...");
+                SetStatus($"Extracting {i + 1} of {extractionFiles.Count}: {Path.GetFileName(inputPath)}...");
                 await Task.Run(() => extractor.ExtractMKVSegmentsThreaded(parameters));
                 if (extractor.ThreadedException != null)
                 {
                     throw extractor.ThreadedException;
                 }
+
+                _completedExtractionFiles++;
+                UpdateExtractionProgress(100);
             }
 
             SetStatus("Extraction complete.");
@@ -250,6 +266,20 @@ public partial class MainWindow : Window
         {
             row.IsSelected = true;
         }
+    }
+
+    private void UpdateExtractionProgress(int currentFileProgress)
+    {
+        int boundedProgress = Math.Clamp(currentFileProgress, 0, 100);
+        double overallProgress = _extractionFileCount == 0
+            ? 0
+            : (_completedExtractionFiles + boundedProgress / 100d) / _extractionFileCount * 100;
+        this.FindControl<ProgressBar>("FileProgressBar")!.Value = boundedProgress;
+        this.FindControl<ProgressBar>("OverallProgressBar")!.Value = overallProgress;
+        this.FindControl<TextBlock>("OverallProgressLabel")!.Text =
+            $"Overall progress: {_completedExtractionFiles} of {_extractionFileCount} files";
+        this.FindControl<TextBlock>("FileProgressPercent")!.Text = $"{boundedProgress}%";
+        this.FindControl<TextBlock>("OverallProgressPercent")!.Text = $"{Math.Round(overallProgress)}%";
     }
 
     private void SelectNone_Click(object? sender, RoutedEventArgs e)
@@ -478,6 +508,12 @@ public partial class MainWindow : Window
         _isAnalyzed = false;
         _segmentRows.Clear();
         _inputFiles.Clear();
+        this.FindControl<StackPanel>("OverallProgressPanel")!.IsVisible = false;
+        this.FindControl<ProgressBar>("FileProgressBar")!.Value = 0;
+        this.FindControl<ProgressBar>("OverallProgressBar")!.Value = 0;
+        this.FindControl<TextBlock>("FileProgressLabel")!.Text = "File progress";
+        this.FindControl<TextBlock>("FileProgressPercent")!.Text = "0%";
+        this.FindControl<TextBlock>("OverallProgressPercent")!.Text = "0%";
         this.FindControl<TextBlock>("ItemCountText")!.Text = "No file analyzed";
         this.FindControl<Button>("ExtractButton")!.IsEnabled = false;
         this.FindControl<Button>("SelectByTypeButton")!.IsEnabled = false;
