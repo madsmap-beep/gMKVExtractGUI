@@ -18,6 +18,7 @@ public partial class MainWindow : Window
     private readonly ObservableCollection<SegmentRow> _segmentRows = new();
     private readonly ObservableCollection<InputFileGroup> _inputFiles = new();
     private bool _isAnalyzed;
+    private bool _isAnalyzing;
 
     public ObservableCollection<SegmentRow> SegmentRows => _segmentRows;
     public ObservableCollection<InputFileGroup> InputFiles => _inputFiles;
@@ -29,6 +30,7 @@ public partial class MainWindow : Window
     public MainWindow(string[]? inputPaths)
     {
         AvaloniaXamlLoader.Load(this);
+        Opened += MainWindow_Opened;
         DataContext = this;
         this.FindControl<ItemsControl>("SegmentList")!.ItemsSource = _inputFiles;
 
@@ -37,7 +39,15 @@ public partial class MainWindow : Window
         {
             this.FindControl<TextBox>("InputPathBox")!.Text = string.Join(Environment.NewLine, existingPaths);
             this.FindControl<TextBox>("OutputPathBox")!.Text = Path.GetDirectoryName(existingPaths[0]) ?? "";
-            SetStatus("Input files loaded. Select Analyze to inspect them.");
+            SetStatus("Analyzing input files...");
+        }
+    }
+
+    private async void MainWindow_Opened(object? sender, EventArgs e)
+    {
+        if (GetInputPaths().Length > 0)
+        {
+            await AnalyzeInputFilesAsync();
         }
     }
 
@@ -73,6 +83,8 @@ public partial class MainWindow : Window
         {
             outputBox.Text = Path.GetDirectoryName(inputPaths[0]) ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         }
+
+        await AnalyzeInputFilesAsync();
     }
 
     private async void BrowseOutput_Click(object? sender, RoutedEventArgs e)
@@ -89,8 +101,13 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void Analyze_Click(object? sender, RoutedEventArgs e)
+    private async Task AnalyzeInputFilesAsync()
     {
+        if (_isAnalyzing)
+        {
+            return;
+        }
+
         string[] inputPaths = GetInputPaths();
         string toolPath = this.FindControl<TextBox>("ToolPathBox")!.Text?.Trim() ?? "";
         if (inputPaths.Length == 0 || inputPaths.Any(inputPath => !File.Exists(inputPath)))
@@ -106,6 +123,7 @@ public partial class MainWindow : Window
         }
 
         _isAnalyzed = false;
+        _isAnalyzing = true;
         _segmentRows.Clear();
         _inputFiles.Clear();
         this.FindControl<TextBlock>("ItemCountText")!.Text = "Analyzing...";
@@ -146,6 +164,7 @@ public partial class MainWindow : Window
         }
         finally
         {
+            _isAnalyzing = false;
             SetBusy(false);
         }
     }
@@ -482,7 +501,8 @@ public partial class MainWindow : Window
 
     private void SetBusy(bool isBusy)
     {
-        this.FindControl<Button>("AnalyzeButton")!.IsEnabled = !isBusy;
+        this.FindControl<Button>("BrowseInputButton")!.IsEnabled = !isBusy;
+        this.FindControl<TextBox>("InputPathBox")!.IsEnabled = !isBusy;
         this.FindControl<Button>("ExtractButton")!.IsEnabled = !isBusy && _isAnalyzed;
         this.FindControl<Button>("SelectByTypeButton")!.IsEnabled = !isBusy && _isAnalyzed;
     }
@@ -493,9 +513,9 @@ public partial class MainWindow : Window
 
     private static gMKVExtractFilenamePatterns CreateFilenamePatterns() => new()
     {
-        VideoTrackFilenamePattern = "{FilenameNoExt}_video_{TrackNumber:00}",
-        AudioTrackFilenamePattern = "{FilenameNoExt}_audio_{TrackNumber:00}",
-        SubtitleTrackFilenamePattern = "{FilenameNoExt}_subtitles_{TrackNumber:00}",
+        VideoTrackFilenamePattern = "{FilenameNoExt}_track{TrackNumber}_[{Language}]",
+        AudioTrackFilenamePattern = "{FilenameNoExt}_track{TrackNumber}_[{Language}]_DELAY {EffectiveDelay}ms",
+        SubtitleTrackFilenamePattern = "{FilenameNoExt}_track{TrackNumber}_[{Language}]",
         ChapterFilenamePattern = "{FilenameNoExt}_chapters",
         AttachmentFilenamePattern = "{AttachmentFilename}",
         TagsFilenamePattern = "{FilenameNoExt}_tags"

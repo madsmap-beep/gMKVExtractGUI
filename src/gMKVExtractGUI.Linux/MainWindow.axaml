@@ -56,8 +56,7 @@
           </ContextMenu>
         </TextBox.ContextMenu>
       </TextBox>
-      <Button Grid.Row="0" Grid.Column="2" Click="BrowseInput_Click" Content="Browse..." />
-      <Button x:Name="AnalyzeButton" Grid.Row="0" Grid.Column="3" Click="Analyze_Click" Content="Analyze" />
+      <Button x:Name="BrowseInputButton" Grid.Row="0" Grid.Column="2" Click="BrowseInput_Click" Content="Browse..." />
 
       <TextBlock Classes="field-label" Grid.Row="1" Text="Output folder" />
       <TextBox x:Name="OutputPathBox" Grid.Row="1" Grid.Column="1" Watermark="Choose where extracted files will be saved" />
