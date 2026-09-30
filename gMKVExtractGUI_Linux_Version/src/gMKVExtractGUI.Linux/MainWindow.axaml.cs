@@ -32,6 +32,8 @@ public partial class MainWindow : Window
     public MainWindow(string[]? inputPaths)
     {
         AvaloniaXamlLoader.Load(this);
+        this.FindControl<TextBlock>("LinuxEditionText")!.Text =
+            $"LINUX EDITION {typeof(App).Assembly.GetName().Version?.ToString(2) ?? "1.0"}";
         Opened += MainWindow_Opened;
         DataContext = this;
         this.FindControl<ItemsControl>("SegmentList")!.ItemsSource = _inputFiles;

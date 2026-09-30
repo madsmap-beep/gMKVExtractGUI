@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-VERSION="${VERSION:-2.15.0}"
+VERSION="${VERSION:-1.0}"
 ARCH_DIR="$ROOT_DIR/packaging/arch"
 OUTPUT_DIR="$ROOT_DIR/artifacts/arch"
 SOURCE_ARCHIVE="$ARCH_DIR/gMKVExtractGUI_Linux_Version-${VERSION}.tar.gz"

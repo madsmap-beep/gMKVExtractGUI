@@ -1,5 +1,5 @@
 Name:           gmkvextractgui
-Version:        %{?pkgversion}%{!?pkgversion:2.15.0}
+Version:        %{?pkgversion}%{!?pkgversion:1.0}
 Release:        1%{?dist}
 Summary:        Matroska track extraction GUI
 License:        Unlicense
@@ -52,5 +52,5 @@ install -m 0644 packaging/gMKVExtractGUI.svg \
 /usr/share/icons/hicolor/scalable/apps/gMKVExtractGUI.svg
 
 %changelog
-* Wed Sep 30 2026 gMKVExtractGUI contributors - 2.15.0-1
+* Wed Sep 30 2026 gMKVExtractGUI contributors - 1.0-1
 - Initial Fedora package

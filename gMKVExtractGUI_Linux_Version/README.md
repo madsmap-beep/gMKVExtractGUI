@@ -13,7 +13,7 @@ Run each package build on its target Linux distribution with the .NET 8 SDK inst
 - Arch Linux: install `base-devel` and `dotnet-sdk`, then run `bash packaging/arch/build-arch.sh`.
 - AppImage: install `appimagetool`, then run `bash packaging/appimage/build-appimage.sh`.
 
-The generated packages are written to `artifacts/debian`, `artifacts/fedora`, and `artifacts/arch`; the AppImage is written to `artifacts/appimage`. Set `VERSION` to override the default package version (`2.15.0`) for package builds. All builds target x86_64 Linux.
+The generated packages are written to `artifacts/debian`, `artifacts/fedora`, and `artifacts/arch`; the AppImage is written to `artifacts/appimage`. The Linux release version is `1.0`. Set `VERSION` to override the default package version for package builds. All builds target x86_64 Linux.
 
 ## Build the application
 

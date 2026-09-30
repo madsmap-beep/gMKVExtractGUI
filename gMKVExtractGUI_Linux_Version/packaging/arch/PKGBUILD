@@ -1,5 +1,5 @@
 pkgname=gmkvextractgui
-pkgver="${VERSION:-2.15.0}"
+pkgver="${VERSION:-1.0}"
 pkgrel=1
 pkgdesc='Matroska track extraction GUI'
 arch=('x86_64')
