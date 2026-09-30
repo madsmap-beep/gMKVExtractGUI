@@ -70,7 +70,7 @@
 
     <Border Grid.Row="2" Background="#FFFFFF" BorderBrush="#D8E0DB" BorderThickness="1" CornerRadius="5" Padding="16">
       <Grid RowDefinitions="Auto,1,*" RowSpacing="12">
-        <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto">
           <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
             <TextBlock Classes="section-title" Text="Extractable elements" />
             <TextBlock x:Name="ItemCountText" Foreground="#69766F" VerticalAlignment="Center" Text="No file analyzed" />
@@ -82,8 +82,9 @@
             <ComboBoxItem Content="Tags" />
             <ComboBoxItem Content="Cue sheet" />
           </ComboBox>
-          <Button Grid.Column="2" Click="SelectAll_Click" Content="Select all" Margin="8,0,0,0" />
-          <Button Grid.Column="3" Click="SelectNone_Click" Content="Clear" Margin="8,0,0,0" />
+          <Button x:Name="SelectByTypeButton" Grid.Column="2" Click="SelectByType_Click" Content="Select by type..." Margin="8,0,0,0" />
+          <Button Grid.Column="3" Click="SelectAll_Click" Content="Select all" Margin="8,0,0,0" />
+          <Button Grid.Column="4" Click="SelectNone_Click" Content="Clear" Margin="8,0,0,0" />
         </Grid>
         <Border Grid.Row="1" Background="#E3E8E5" Height="1" />
         <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">

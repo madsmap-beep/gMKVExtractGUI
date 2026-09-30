@@ -257,6 +257,122 @@ public partial class MainWindow : Window
         }
     }
 
+    private void SelectByType_Click(object? sender, RoutedEventArgs e)
+    {
+        Button selectByTypeButton = this.FindControl<Button>("SelectByTypeButton")!;
+        var menu = new ContextMenu();
+
+        int selectedCount = _segmentRows.Count(row => row.IsSelected);
+        menu.Items.Add(CreateSelectionMenuItem(
+            $"Check All Tracks ({selectedCount}/{_segmentRows.Count})",
+            _segmentRows.ToList()));
+        menu.Items.Add(new Separator());
+
+        AddTrackTypeMenu(menu, MkvTrackType.video, "Video");
+        AddTrackTypeMenu(menu, MkvTrackType.audio, "Audio");
+        AddTrackTypeMenu(menu, MkvTrackType.subtitles, "Subtitle");
+        AddSegmentTypeMenu(menu, "Chapter", row => row.Segment is gMKVChapter);
+        AddSegmentTypeMenu(menu, "Attachment", row => row.Segment is gMKVAttachment);
+
+        menu.Open(selectByTypeButton);
+    }
+
+    private void AddTrackTypeMenu(ContextMenu menu, MkvTrackType trackType, string typeLabel)
+    {
+        List<SegmentRow> rows = _segmentRows
+            .Where(row => row.Segment is gMKVTrack track && track.TrackType == trackType)
+            .ToList();
+        int selectedCount = rows.Count(row => row.IsSelected);
+        var typeMenu = new MenuItem
+        {
+            Header = $"Check {typeLabel} Tracks... ({selectedCount}/{rows.Count})",
+            IsEnabled = selectedCount < rows.Count
+        };
+
+        typeMenu.Items.Add(CreateSelectionMenuItem($"All {typeLabel} Tracks ({selectedCount}/{rows.Count})", rows));
+        foreach ((string characteristic, Func<gMKVTrack, string> selector) in GetTrackCharacteristics(trackType))
+        {
+            List<(string Value, List<SegmentRow> Rows)> groups = rows
+                .Select(row => (Row: row, Track: (gMKVTrack)row.Segment))
+                .GroupBy(item => selector(item.Track))
+                .OrderBy(group => group.Key, StringComparer.OrdinalIgnoreCase)
+                .Select(group => (group.Key, group.Select(item => item.Row).ToList()))
+                .ToList();
+
+            var characteristicMenu = new MenuItem
+            {
+                Header = $"{typeLabel} Tracks by {characteristic} ({groups.Count})...",
+                IsEnabled = groups.Count > 0
+            };
+            foreach ((string value, List<SegmentRow> groupRows) in groups)
+            {
+                string displayValue = string.IsNullOrWhiteSpace(value) ? "(unspecified)" : value;
+                int groupSelectedCount = groupRows.Count(row => row.IsSelected);
+                characteristicMenu.Items.Add(CreateSelectionMenuItem(
+                    $"{characteristic}: [{displayValue}] ({groupSelectedCount}/{groupRows.Count})",
+                    groupRows));
+            }
+
+            typeMenu.Items.Add(characteristicMenu);
+        }
+
+        menu.Items.Add(typeMenu);
+    }
+
+    private void AddSegmentTypeMenu(ContextMenu menu, string typeLabel, Func<SegmentRow, bool> matches)
+    {
+        List<SegmentRow> rows = _segmentRows.Where(matches).ToList();
+        int selectedCount = rows.Count(row => row.IsSelected);
+        var typeMenu = new MenuItem
+        {
+            Header = $"Check {typeLabel} Tracks... ({selectedCount}/{rows.Count})",
+            IsEnabled = selectedCount < rows.Count
+        };
+        typeMenu.Items.Add(CreateSelectionMenuItem($"All {typeLabel} Tracks ({selectedCount}/{rows.Count})", rows));
+        menu.Items.Add(typeMenu);
+    }
+
+    private static MenuItem CreateSelectionMenuItem(string header, List<SegmentRow> rows)
+    {
+        int selectedCount = rows.Count(row => row.IsSelected);
+        var item = new MenuItem
+        {
+            Header = header,
+            IsEnabled = selectedCount < rows.Count
+        };
+        item.Click += (_, _) =>
+        {
+            foreach (SegmentRow row in rows)
+            {
+                row.IsSelected = true;
+            }
+        };
+        return item;
+    }
+
+    private static IReadOnlyList<(string Name, Func<gMKVTrack, string> Selector)> GetTrackCharacteristics(MkvTrackType trackType)
+    {
+        var common = new List<(string Name, Func<gMKVTrack, string> Selector)>
+        {
+            ("Language", track => track.Language),
+            ("Language IETF", track => track.LanguageIetf),
+            ("Codec", track => track.CodecID),
+            ("Track Name", track => track.TrackName),
+            ("Forced", track => track.Forced ? "Yes" : "No")
+        };
+
+        if (trackType == MkvTrackType.video)
+        {
+            common.Insert(2, ("Resolution", track => $"{track.VideoPixelWidth}x{track.VideoPixelHeight}"));
+        }
+        else if (trackType == MkvTrackType.audio)
+        {
+            common.Insert(2, ("Channels", track => track.AudioChannels.ToString()));
+        }
+
+        return common;
+    }
+
     private void RemoveAllInputFiles_Click(object? sender, RoutedEventArgs e)
     {
         this.FindControl<TextBox>("InputPathBox")!.Text = "";
@@ -363,6 +479,7 @@ public partial class MainWindow : Window
     {
         this.FindControl<Button>("AnalyzeButton")!.IsEnabled = !isBusy;
         this.FindControl<Button>("ExtractButton")!.IsEnabled = !isBusy && _isAnalyzed;
+        this.FindControl<Button>("SelectByTypeButton")!.IsEnabled = !isBusy && _isAnalyzed;
     }
 
     private void SetStatus(string status) => this.FindControl<TextBlock>("StatusText")!.Text = status;
