@@ -63,6 +63,7 @@ namespace gMKVToolNix.Forms
 
         private List<string> _CmdArguments = new List<string>();
         private readonly Dictionary<Button, Size> _responsiveButtonBaseSizes = new Dictionary<Button, Size>();
+        private ContextMenuStrip _trackSelectionMenu;
         private bool _contextMenuItemsDirty = true;
         private bool _isApplyingResponsiveLayout = false;
         private int _chapterTypeComboBaseWidth;
@@ -78,6 +79,7 @@ namespace gMKVToolNix.Forms
                 _FromConstructor = true;
 
                 InitializeComponent();
+                _trackSelectionMenu = new ContextMenuStrip(components);
                 CaptureResponsiveLayoutBaselines();
 
                 // Get the command line arguments
@@ -3196,7 +3198,27 @@ namespace gMKVToolNix.Forms
         {
             try
             {
-                contextMenuStrip.Show(btnSelect, new Point(0, btnSelect.Height));
+                SetContextMenuText();
+                _trackSelectionMenu.Items.Clear();
+
+                ToolStripItem[] selectionItems =
+                {
+                    checkTracksToolStripMenuItem,
+                    toolStripSeparator2,
+                    checkVideoTracksToolStripMenuItem,
+                    checkAudioTracksToolStripMenuItem,
+                    checkSubtitleTracksToolStripMenuItem,
+                    checkChapterTracksToolStripMenuItem,
+                    checkAttachmentTracksToolStripMenuItem
+                };
+
+                foreach (ToolStripItem item in selectionItems)
+                {
+                    _trackSelectionMenu.Items.Add(CloneTrackSelectionMenuItem(item));
+                }
+
+                ThemeManager.ApplyContextMenuTheme(_trackSelectionMenu, _Settings.DarkMode);
+                _trackSelectionMenu.Show(btnSelect, new Point(0, btnSelect.Height));
             }
             catch (Exception ex)
             {
@@ -3204,6 +3226,37 @@ namespace gMKVToolNix.Forms
                 gMKVLogger.Log(ex.ToString());
                 ShowErrorMessage(ex.Message);
             }
+        }
+
+        private ToolStripItem CloneTrackSelectionMenuItem(ToolStripItem sourceItem)
+        {
+            if (sourceItem is ToolStripSeparator)
+            {
+                return new ToolStripSeparator();
+            }
+
+            if (!(sourceItem is ToolStripMenuItem sourceMenuItem))
+            {
+                throw new InvalidOperationException($"Unsupported track selection menu item: {sourceItem.GetType().FullName}");
+            }
+
+            var clonedMenuItem = new ToolStripMenuItem(sourceMenuItem.Text)
+            {
+                Enabled = sourceMenuItem.Enabled,
+                Visible = sourceMenuItem.Visible
+            };
+
+            foreach (ToolStripItem child in sourceMenuItem.DropDownItems)
+            {
+                clonedMenuItem.DropDownItems.Add(CloneTrackSelectionMenuItem(child));
+            }
+
+            if (sourceMenuItem.DropDownItems.Count == 0)
+            {
+                clonedMenuItem.Click += (sender, args) => sourceMenuItem.PerformClick();
+            }
+
+            return clonedMenuItem;
         }
 
         private void trvInputFiles_AfterCheck(object sender, TreeViewEventArgs e)
