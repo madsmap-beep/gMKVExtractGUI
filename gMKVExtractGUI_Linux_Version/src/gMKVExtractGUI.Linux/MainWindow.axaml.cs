@@ -216,14 +216,26 @@ public partial class MainWindow : Window
             _extractionFileCount = extractionFiles.Count;
             this.FindControl<StackPanel>("OverallProgressPanel")!.IsVisible = _extractionFileCount > 1;
 
+            int activeExtractionFile = -1;
             var extractor = new gMKVExtract(toolPath);
-            extractor.MkvExtractProgressUpdated += progress => Dispatcher.UIThread.Post(() => UpdateExtractionProgress(progress));
+            extractor.MkvExtractProgressUpdated += progress =>
+            {
+                int eventFileIndex = activeExtractionFile;
+                Dispatcher.UIThread.Post(() =>
+                {
+                    if (eventFileIndex == activeExtractionFile)
+                    {
+                        UpdateExtractionProgress(progress);
+                    }
+                });
+            };
             extractor.MkvExtractTrackUpdated += (filename, trackName) => Dispatcher.UIThread.Post(() => SetStatus($"{Path.GetFileName(filename)}: {trackName}"));
 
             SetBusy(true);
             for (int i = 0; i < extractionFiles.Count; i++)
             {
                 (string inputPath, List<gMKVSegment> selected) = extractionFiles[i];
+                activeExtractionFile = i;
                 this.FindControl<TextBlock>("FileProgressLabel")!.Text = $"File progress: {Path.GetFileName(inputPath)}";
                 UpdateExtractionProgress(0);
 
@@ -245,7 +257,8 @@ public partial class MainWindow : Window
                 }
 
                 _completedExtractionFiles++;
-                UpdateExtractionProgress(100);
+                activeExtractionFile = -1;
+                UpdateExtractionProgress(100, currentFileCompleted: true);
             }
 
             SetStatus("Extraction complete.");
@@ -268,12 +281,15 @@ public partial class MainWindow : Window
         }
     }
 
-    private void UpdateExtractionProgress(int currentFileProgress)
+    private void UpdateExtractionProgress(int currentFileProgress, bool currentFileCompleted = false)
     {
         int boundedProgress = Math.Clamp(currentFileProgress, 0, 100);
         double overallProgress = _extractionFileCount == 0
             ? 0
-            : (_completedExtractionFiles + boundedProgress / 100d) / _extractionFileCount * 100;
+            : Math.Clamp(
+                (_completedExtractionFiles + (currentFileCompleted ? 0 : boundedProgress / 100d)) / _extractionFileCount * 100,
+                0,
+                100);
         this.FindControl<ProgressBar>("FileProgressBar")!.Value = boundedProgress;
         this.FindControl<ProgressBar>("OverallProgressBar")!.Value = overallProgress;
         this.FindControl<TextBlock>("OverallProgressLabel")!.Text =
