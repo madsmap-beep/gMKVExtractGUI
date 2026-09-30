@@ -38,7 +38,24 @@
 
     <Grid Grid.Row="1" ColumnDefinitions="150,*,Auto,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="9">
       <TextBlock Classes="field-label" Grid.Row="0" Text="Input files" />
-      <TextBox x:Name="InputPathBox" Grid.Row="0" Grid.Column="1" AcceptsReturn="True" Height="56" TextChanged="InputPath_Changed" Watermark="Choose one or more MKV files" />
+      <TextBox x:Name="InputPathBox" Grid.Row="0" Grid.Column="1" AcceptsReturn="True" Height="56" TextChanged="InputPath_Changed" Watermark="Choose one or more MKV files">
+        <TextBox.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="Add Input File(s)..." Click="AddInputFilesMenu_Click" />
+            <Separator />
+            <MenuItem Header="Check All Tracks" Click="SelectAll_Click" />
+            <MenuItem Header="Uncheck All Tracks" Click="SelectNone_Click" />
+            <Separator />
+            <MenuItem Header="Remove All Input Files" Click="RemoveAllInputFiles_Click" />
+            <MenuItem Header="Remove Selected Input File" Click="RemoveSelectedInputFile_Click" />
+            <MenuItem Header="Open Selected File..." Click="OpenSelectedInputFile_Click" />
+            <MenuItem Header="Open Selected File Folder..." Click="OpenSelectedInputFolder_Click" />
+            <Separator />
+            <MenuItem Header="Expand All" Click="ExpandInputFiles_Click" />
+            <MenuItem Header="Collapse All" Click="CollapseInputFiles_Click" />
+          </ContextMenu>
+        </TextBox.ContextMenu>
+      </TextBox>
       <Button Grid.Row="0" Grid.Column="2" Click="BrowseInput_Click" Content="Browse..." />
       <Button x:Name="AnalyzeButton" Grid.Row="0" Grid.Column="3" Click="Analyze_Click" Content="Analyze" />
 
@@ -73,15 +90,30 @@
           <ItemsControl x:Name="SegmentList">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
-                <Border BorderBrush="#E8ECE9" BorderThickness="0,0,0,1" Padding="6,8">
-                  <CheckBox IsChecked="{Binding IsSelected}" HorizontalAlignment="Stretch">
-                    <Grid ColumnDefinitions="150,100,*,Auto" ColumnSpacing="12">
-                      <TextBlock Grid.Column="0" Foreground="#69766F" FontSize="11" Text="{Binding SourceName}" VerticalAlignment="Center" />
-                      <TextBlock Grid.Column="1" Foreground="#2E6753" FontSize="11" FontWeight="SemiBold" Text="{Binding Kind}" VerticalAlignment="Center" />
-                      <TextBlock Grid.Column="2" Foreground="#17231F" Text="{Binding Summary}" VerticalAlignment="Center" />
-                      <TextBlock Grid.Column="3" Foreground="#69766F" Text="{Binding Details}" VerticalAlignment="Center" />
-                    </Grid>
-                  </CheckBox>
+                <Border BorderBrush="#D8E0DB" BorderThickness="1" CornerRadius="4" Margin="0,0,0,8">
+                  <Expander IsExpanded="{Binding IsExpanded, Mode=TwoWay}">
+                    <Expander.Header>
+                      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Margin="4,2">
+                        <TextBlock Foreground="#17231F" FontWeight="SemiBold" Text="{Binding FileName}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Foreground="#69766F" Text="{Binding ItemCount}" VerticalAlignment="Center" />
+                      </Grid>
+                    </Expander.Header>
+                    <ItemsControl ItemsSource="{Binding SegmentRows}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Border BorderBrush="#E8ECE9" BorderThickness="0,1,0,0" Padding="6,8">
+                            <CheckBox IsChecked="{Binding IsSelected}" HorizontalAlignment="Stretch">
+                              <Grid ColumnDefinitions="100,*,Auto" ColumnSpacing="12">
+                                <TextBlock Grid.Column="0" Foreground="#2E6753" FontSize="11" FontWeight="SemiBold" Text="{Binding Kind}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Foreground="#17231F" Text="{Binding Summary}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2" Foreground="#69766F" Text="{Binding Details}" VerticalAlignment="Center" />
+                              </Grid>
+                            </CheckBox>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </Expander>
                 </Border>
               </DataTemplate>
             </ItemsControl.ItemTemplate>

@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -15,9 +16,11 @@ namespace gMKVExtractGUI.Linux;
 public partial class MainWindow : Window
 {
     private readonly ObservableCollection<SegmentRow> _segmentRows = new();
+    private readonly ObservableCollection<InputFileGroup> _inputFiles = new();
     private bool _isAnalyzed;
 
     public ObservableCollection<SegmentRow> SegmentRows => _segmentRows;
+    public ObservableCollection<InputFileGroup> InputFiles => _inputFiles;
 
     public MainWindow() : this(null)
     {
@@ -27,7 +30,7 @@ public partial class MainWindow : Window
     {
         AvaloniaXamlLoader.Load(this);
         DataContext = this;
-        this.FindControl<ItemsControl>("SegmentList")!.ItemsSource = _segmentRows;
+        this.FindControl<ItemsControl>("SegmentList")!.ItemsSource = _inputFiles;
 
         string[] existingPaths = (inputPaths ?? Array.Empty<string>()).Where(File.Exists).ToArray();
         if (existingPaths.Length > 0)
@@ -38,7 +41,11 @@ public partial class MainWindow : Window
         }
     }
 
-    private async void BrowseInput_Click(object? sender, RoutedEventArgs e)
+    private async void BrowseInput_Click(object? sender, RoutedEventArgs e) => await SelectInputFilesAsync(false);
+
+    private async void AddInputFilesMenu_Click(object? sender, RoutedEventArgs e) => await SelectInputFilesAsync(true);
+
+    private async Task SelectInputFilesAsync(bool append)
     {
         IReadOnlyList<IStorageFile> files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
@@ -56,10 +63,16 @@ public partial class MainWindow : Window
             return;
         }
 
-        string[] inputPaths = files.Select(file => file.Path.LocalPath).ToArray();
+        string[] selectedPaths = files.Select(file => file.Path.LocalPath).ToArray();
+        string[] inputPaths = append
+            ? GetInputPaths().Concat(selectedPaths).Distinct(StringComparer.Ordinal).ToArray()
+            : selectedPaths;
         this.FindControl<TextBox>("InputPathBox")!.Text = string.Join(Environment.NewLine, inputPaths);
         TextBox outputBox = this.FindControl<TextBox>("OutputPathBox")!;
-        outputBox.Text ??= Path.GetDirectoryName(inputPaths[0]) ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        if (string.IsNullOrWhiteSpace(outputBox.Text))
+        {
+            outputBox.Text = Path.GetDirectoryName(inputPaths[0]) ?? Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        }
     }
 
     private async void BrowseOutput_Click(object? sender, RoutedEventArgs e)
@@ -94,6 +107,7 @@ public partial class MainWindow : Window
 
         _isAnalyzed = false;
         _segmentRows.Clear();
+        _inputFiles.Clear();
         this.FindControl<TextBlock>("ItemCountText")!.Text = "Analyzing...";
         SetBusy(true);
         try
@@ -103,10 +117,16 @@ public partial class MainWindow : Window
                 string inputPath = inputPaths[i];
                 SetStatus($"Analyzing {i + 1} of {inputPaths.Length}: {Path.GetFileName(inputPath)}...");
                 List<gMKVSegment> segments = await Task.Run(() => gMKVHelper.GetMergedMkvSegmentList(toolPath, inputPath));
-                foreach (gMKVSegment segment in segments.Where(IsExtractableSegment))
+                List<SegmentRow> fileRows = segments
+                    .Where(IsExtractableSegment)
+                    .Select(segment => new SegmentRow(inputPath, segment))
+                    .ToList();
+                foreach (SegmentRow row in fileRows)
                 {
-                    _segmentRows.Add(new SegmentRow(inputPath, segment));
+                    _segmentRows.Add(row);
                 }
+
+                _inputFiles.Add(new InputFileGroup(inputPath, fileRows));
             }
 
             this.FindControl<TextBlock>("ItemCountText")!.Text = $"{_segmentRows.Count} items";
@@ -237,16 +257,107 @@ public partial class MainWindow : Window
         }
     }
 
+    private void RemoveAllInputFiles_Click(object? sender, RoutedEventArgs e)
+    {
+        this.FindControl<TextBox>("InputPathBox")!.Text = "";
+    }
+
+    private void RemoveSelectedInputFile_Click(object? sender, RoutedEventArgs e)
+    {
+        TextBox inputBox = this.FindControl<TextBox>("InputPathBox")!;
+        string text = inputBox.Text ?? "";
+        if (text.Length == 0)
+        {
+            return;
+        }
+
+        int selectionStart = Math.Clamp(inputBox.SelectionStart, 0, text.Length);
+        int selectionEnd = Math.Clamp(inputBox.SelectionEnd, selectionStart, text.Length);
+        int firstLineStart = selectionStart == 0 ? 0 : text.LastIndexOf('\n', selectionStart - 1) + 1;
+        int lastLinePosition = selectionEnd > selectionStart ? selectionEnd - 1 : selectionStart;
+        int lineEnd = text.IndexOf('\n', lastLinePosition);
+        int removeLength = (lineEnd < 0 ? text.Length : lineEnd + 1) - firstLineStart;
+        inputBox.Text = text.Remove(firstLineStart, removeLength);
+        inputBox.CaretIndex = Math.Min(firstLineStart, inputBox.Text.Length);
+    }
+
+    private void OpenSelectedInputFile_Click(object? sender, RoutedEventArgs e)
+    {
+        foreach (string inputPath in GetContextInputPaths().Where(File.Exists))
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo(inputPath) { UseShellExecute = true });
+            }
+            catch (Exception ex)
+            {
+                SetStatus($"Could not open file: {ex.Message}");
+                return;
+            }
+        }
+    }
+
+    private void OpenSelectedInputFolder_Click(object? sender, RoutedEventArgs e)
+    {
+        string? inputPath = GetContextInputPaths().FirstOrDefault(File.Exists);
+        string? directory = inputPath == null ? null : Path.GetDirectoryName(inputPath);
+        if (string.IsNullOrWhiteSpace(directory) || !Directory.Exists(directory))
+        {
+            return;
+        }
+
+        try
+        {
+            var startInfo = new ProcessStartInfo("xdg-open") { UseShellExecute = false };
+            startInfo.ArgumentList.Add(directory);
+            Process.Start(startInfo);
+        }
+        catch (Exception ex)
+        {
+            SetStatus($"Could not open folder: {ex.Message}");
+        }
+    }
+
+    private void ExpandInputFiles_Click(object? sender, RoutedEventArgs e)
+    {
+        foreach (InputFileGroup inputFile in _inputFiles)
+        {
+            inputFile.IsExpanded = true;
+        }
+    }
+
+    private void CollapseInputFiles_Click(object? sender, RoutedEventArgs e)
+    {
+        foreach (InputFileGroup inputFile in _inputFiles)
+        {
+            inputFile.IsExpanded = false;
+        }
+    }
+
     private void InputPath_Changed(object? sender, TextChangedEventArgs e)
     {
         _isAnalyzed = false;
         _segmentRows.Clear();
+        _inputFiles.Clear();
         this.FindControl<TextBlock>("ItemCountText")!.Text = "No file analyzed";
         this.FindControl<Button>("ExtractButton")!.IsEnabled = false;
     }
 
     private string[] GetInputPaths() => (this.FindControl<TextBox>("InputPathBox")!.Text ?? "")
         .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    private string[] GetContextInputPaths()
+    {
+        TextBox inputBox = this.FindControl<TextBox>("InputPathBox")!;
+        string text = inputBox.Text ?? "";
+        int selectionStart = Math.Clamp(inputBox.SelectionStart, 0, text.Length);
+        int selectionEnd = Math.Clamp(inputBox.SelectionEnd, selectionStart, text.Length);
+        int firstLineStart = selectionStart == 0 ? 0 : text.LastIndexOf('\n', selectionStart - 1) + 1;
+        int lastLinePosition = selectionEnd > selectionStart ? selectionEnd - 1 : selectionStart;
+        int lineEnd = text.IndexOf('\n', lastLinePosition);
+        string selectedLines = text.Substring(firstLineStart, (lineEnd < 0 ? text.Length : lineEnd) - firstLineStart);
+        return selectedLines.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    }
 
     private void SetBusy(bool isBusy)
     {
@@ -274,7 +385,6 @@ public sealed class SegmentRow : INotifyPropertyChanged
     private bool _isSelected = true;
 
     public gMKVSegment Segment { get; }
-    public string SourceName { get; }
     public string Kind { get; }
     public string Summary { get; }
     public string Details { get; }
@@ -299,7 +409,6 @@ public sealed class SegmentRow : INotifyPropertyChanged
     public SegmentRow(string inputPath, gMKVSegment segment)
     {
         InputPath = inputPath;
-        SourceName = Path.GetFileName(inputPath);
         Segment = segment;
         (Kind, Summary, Details) = segment switch
         {
@@ -314,4 +423,35 @@ public sealed class SegmentRow : INotifyPropertyChanged
     }
 
     public string InputPath { get; }
+}
+
+public sealed class InputFileGroup
+{
+    private bool _isExpanded = true;
+
+    public string FileName { get; }
+    public string ItemCount => $"{SegmentRows.Count} items";
+    public ObservableCollection<SegmentRow> SegmentRows { get; }
+    public bool IsExpanded
+    {
+        get => _isExpanded;
+        set
+        {
+            if (_isExpanded == value)
+            {
+                return;
+            }
+
+            _isExpanded = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsExpanded)));
+        }
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public InputFileGroup(string inputPath, IEnumerable<SegmentRow> segmentRows)
+    {
+        FileName = Path.GetFileName(inputPath);
+        SegmentRows = new ObservableCollection<SegmentRow>(segmentRows);
+    }
 }

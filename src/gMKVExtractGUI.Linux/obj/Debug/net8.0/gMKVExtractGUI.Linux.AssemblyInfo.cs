@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("gMKVExtractGUI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8e4ae6f5ba88846753336c09d42fa19ea77a069f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7620842fe24e5b595d61c036babe26963773659a")]
 [assembly: System.Reflection.AssemblyProductAttribute("gMKVExtractGUI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("gMKVExtractGUI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
